@@ -36,40 +36,77 @@
 ## 🏗️ How everything connects together
 
 ┌─────────────────────────────────────────┐
+
 │           USER (Browser)                │
+
 │   Types: "Show top 5 customers"         │
+
 └──────────────┬──────────────────────────┘
-               │ HTTP Request
-               ▼
+
+│ HTTP Request
+
+▼
+
 ┌─────────────────────────────────────────┐
+
 │         REACT FRONTEND                  │
+
 │   (localhost:5173)                      │
-│   Shows UI, sends request to backend   │
+
+│   Shows UI, sends request to backend    │
+
 └──────────────┬──────────────────────────┘
-               │ API Call
-               ▼
+
+│ API Call
+
+▼
+
 ┌─────────────────────────────────────────┐
+
 │         FASTAPI BACKEND                 │
+
 │   (localhost:8000)                      │
+
 │                                         │
-│   Step 1: Verify JWT token (is logged in?)
+
+│   Step 1: Verify JWT token              │
+
 │   Step 2: Read database schema          │
+
 │   Step 3: Build prompt for AI           │
-│   Step 4: Call Groq AI                  │
+
+│   Step 4: Call Groq AI (LLaMA 3.3)      │
+
 │   Step 5: Validate SQL (SELECT only)    │
+
 │   Step 6: Run SQL on user's database    │
+
 │   Step 7: Calculate confidence score    │
+
 │   Step 8: Save to history               │
-│   Step 9: Return results                │
+
+│   Step 9: Return results to frontend    │
+
 └──────────────┬──────────────────────────┘
-               │
-       ┌───────┴────────┐
-       ▼                ▼
+
+│
+
+┌───────┴────────┐
+
+▼                ▼
+
 ┌──────────┐    ┌──────────────┐
+
 │ Groq AI  │    │  PostgreSQL  │
+
 │ LLaMA 3.3│    │  Database    │
+
 │ Generates│    │  Stores:     │
+
 │ the SQL  │    │  - Users     │
+
 └──────────┘    │  - Connections│
-                │  - History   │
-                └──────────────┘
+
+│  - History   │
+
+└──────────────┘
