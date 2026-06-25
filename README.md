@@ -32,9 +32,7 @@
 | Architecture | Repository Pattern, Service Layer |
 
 ---
-
-## 🏗️ How everything connects together
-
+## 🏗️ How It Works
 ┌─────────────────────────────────────────┐
 
 │           USER (Browser)                │
