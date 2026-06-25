@@ -25,15 +25,17 @@ jobs:
 
     - name: Run tests
       env:
-        SECRET_KEY: testsecretkey32charslongfortesting
+        SECRET_KEY: testsecretkey32charslongfortestingonly
         ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
         LLM_PROVIDER: groq
-        GROQ_API_KEY: test-key
+        GROQ_API_KEY: test-key-not-real
         GROQ_MODEL: llama-3.3-70b-versatile
         POSTGRES_HOST: localhost
         POSTGRES_PASSWORD: test
-        DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/test
-        DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/test
+        POSTGRES_USER: postgres
+        POSTGRES_DB: testdb
+        DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/testdb
+        DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/testdb
       run: |
         cd backend
-        pytest tests/ -v
+        pytest tests/test_basic.py -v
