@@ -1,0 +1,39 @@
+name: SQL-Mind Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Run tests
+      env:
+        SECRET_KEY: testsecretkey32charslongfortesting
+        ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+        LLM_PROVIDER: groq
+        GROQ_API_KEY: test-key
+        GROQ_MODEL: llama-3.3-70b-versatile
+        POSTGRES_HOST: localhost
+        POSTGRES_PASSWORD: test
+        DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/test
+        DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/test
+      run: |
+        cd backend
+        pytest tests/ -v
