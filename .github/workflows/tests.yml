@@ -11,31 +11,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python 3.11
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Run tests
-      env:
-        SECRET_KEY: testsecretkey32charslongfortestingonly
-        ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
-        LLM_PROVIDER: groq
-        GROQ_API_KEY: test-key-not-real
-        GROQ_MODEL: llama-3.3-70b-versatile
-        POSTGRES_HOST: localhost
-        POSTGRES_PASSWORD: test
-        POSTGRES_USER: postgres
-        POSTGRES_DB: testdb
-        DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/testdb
-        DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/testdb
-      run: |
-        cd backend
-        pytest tests/test_basic.py -v
+      - name: Run tests
+        env:
+          SECRET_KEY: testsecretkey32charslongfortestingonly
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          LLM_PROVIDER: groq
+          GROQ_API_KEY: test-key-not-real
+          GROQ_MODEL: llama-3.3-70b-versatile
+          POSTGRES_HOST: localhost
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: postgres
+          POSTGRES_DB: testdb
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/testdb
+          DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/testdb
+        run: |
+          cd backend
+          pytest tests/test_basic.py -v
