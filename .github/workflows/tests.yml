@@ -1,42 +1,90 @@
+# name: SQL-Mind Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Set up Python 3.11
+#         uses: actions/setup-python@v5
+#         with:
+#           python-version: '3.11'
+
+#       - name: Install dependencies
+#         run: |
+#           cd backend
+#           pip install --upgrade pip
+#           pip install -r requirements.txt
+
+#       - name: Run tests
+#         env:
+#           SECRET_KEY: testsecretkey32charslongfortestingonly
+#           ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+#           LLM_PROVIDER: groq
+#           GROQ_API_KEY: test-key-not-real
+#           GROQ_MODEL: llama-3.3-70b-versatile
+#           POSTGRES_HOST: localhost
+#           POSTGRES_PASSWORD: test
+#           POSTGRES_USER: postgres
+#           POSTGRES_DB: testdb
+#           DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/testdb
+#           DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/testdb
+#         run: |
+#           cd backend
+#           pytest tests/test_basic.py -v
+
 name: SQL-Mind Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
           cd backend
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run tests
         env:
-          SECRET_KEY: testsecretkey32charslongfortestingonly
-          ENCRYPTION_KEY: dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleXQ=
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
           LLM_PROVIDER: groq
-          GROQ_API_KEY: test-key-not-real
+          GROQ_API_KEY: test-key
           GROQ_MODEL: llama-3.3-70b-versatile
+
           POSTGRES_HOST: localhost
-          POSTGRES_PASSWORD: test
+          POSTGRES_PORT: 5432
           POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test
           POSTGRES_DB: testdb
-          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost/testdb
-          DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost/testdb
+
+          DATABASE_URL: postgresql+asyncpg://postgres:test@localhost:5432/testdb
+          DATABASE_URL_SYNC: postgresql+psycopg2://postgres:test@localhost:5432/testdb
+
         run: |
           cd backend
-          pytest tests/test_basic.py -v
+          pytest tests/test_basic.py -vv
