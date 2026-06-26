@@ -70,8 +70,9 @@ jobs:
 
       - name: Run tests
         env:
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
-          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+          DEBUG: false
+          SECRET_KEY: testsecretkey32charslongfortestingonly
+          ENCRYPTION_KEY: gCppvkWKw-wfrBjuSnoTJKFKA_TgUayV7xLGHwvAkPY=
           LLM_PROVIDER: groq
           GROQ_API_KEY: test-key
           GROQ_MODEL: llama-3.3-70b-versatile
