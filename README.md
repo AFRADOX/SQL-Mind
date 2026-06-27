@@ -74,3 +74,6 @@
                 │  - History   │
                 └──────────────┘
 ```
+# SQL-Mind 🧠
+
+![Tests](https://github.com/AFRADOX/SQL-Mind/actions/workflows/tests.yml/badge.svg)
