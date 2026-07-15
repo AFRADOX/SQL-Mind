@@ -29,7 +29,7 @@
 | SQL Validation | sqlglot (AST parsing) |
 | Frontend | React.js, Tailwind CSS, Zustand |
 | Authentication | JWT, Bcrypt, Fernet encryption |
-| Architecture | Repository Pattern, Service Layer |
+| Architecture | Repository Pattern,Service Layer |
 
 ---
 ## 🏗️ How It Works
