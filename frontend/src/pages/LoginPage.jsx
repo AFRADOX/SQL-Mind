@@ -1,9 +1,17 @@
-// src/pages/LoginPage.jsx
-
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../api/client"
 import { useAuthStore } from "../store/authStore"
+
+function extractErrorMessage(e, fallback) {
+  const detail = e.response?.data?.detail
+  if (!detail) return fallback
+  if (typeof detail === "string") return detail
+  if (Array.isArray(detail)) {
+    return detail.map((d) => d.msg || JSON.stringify(d)).join(", ")
+  }
+  return fallback
+}
 
 export default function LoginPage() {
   const [tab, setTab] = useState("login")
@@ -26,7 +34,7 @@ export default function LoginPage() {
       setAuth(me.data, data.access_token)
       navigate("/dashboard")
     } catch (e) {
-      setError(e.response?.data?.detail ?? "Login failed.")
+      setError(extractErrorMessage(e, "Login failed."))
     } finally {
       setLoading(false)
     }
@@ -43,7 +51,7 @@ export default function LoginPage() {
       })
       setTab("login")
     } catch (e) {
-      setError(e.response?.data?.detail ?? "Registration failed.")
+      setError(extractErrorMessage(e, "Registration failed."))
     } finally {
       setLoading(false)
     }
