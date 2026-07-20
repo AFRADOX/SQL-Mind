@@ -1,5 +1,3 @@
-# backend/app/api/v1/routes/query.py
-
 from __future__ import annotations
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession

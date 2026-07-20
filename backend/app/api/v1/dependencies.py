@@ -1,5 +1,3 @@
-# backend/app/api/v1/dependencies.py
-
 from __future__ import annotations
 from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer

@@ -33,10 +33,22 @@ async def register(
 
 
 @router.post("/login", response_model=TokenResponse)
+# async def login(
+#     data: UserLoginRequest,
+#     db: AsyncSession = Depends(get_db)
+# ):
+#     service = AuthService(db)
+#     return await service.login(data.email, data.password)
 async def login(
     data: UserLoginRequest,
     db: AsyncSession = Depends(get_db)
 ):
+    print("=" * 50)
+    print("LOGIN ATTEMPT")
+    print("Email:", data.email)
+    print("Password:", data.password)
+    print("=" * 50)
+
     service = AuthService(db)
     return await service.login(data.email, data.password)
 

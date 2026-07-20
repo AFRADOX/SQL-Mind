@@ -1,5 +1,3 @@
-# backend/app/services/auth_service.py
-
 from __future__ import annotations
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession

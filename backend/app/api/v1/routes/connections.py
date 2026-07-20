@@ -1,5 +1,3 @@
-# backend/app/api/v1/routes/connections.py
-
 from __future__ import annotations
 import uuid
 from fastapi import APIRouter, Depends, status

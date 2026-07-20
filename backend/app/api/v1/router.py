@@ -1,5 +1,3 @@
-# backend/app/api/v1/router.py
-
 from fastapi import APIRouter
 from app.api.v1.routes.auth import router as auth_router
 from app.api.v1.routes.connections import router as connections_router
