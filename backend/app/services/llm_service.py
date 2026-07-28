@@ -170,17 +170,31 @@ class LLMService:
             return await self._call_gemini(messages)
         return await self._call_openai(messages)
 
+    # async def _call_groq(self, messages: list[dict]) -> dict:
+    #     from groq import Groq
+    #     client = Groq(api_key=settings.groq_api_key)
+    #     full_messages = [
+    #         {"role": "system", "content": SYSTEM_PROMPT}
+    #     ] + messages
+    #     response = client.chat.completions.create(
+    #         model=settings.groq_model,
+    #         messages=full_messages,
+    #         temperature=settings.llm_temperature,
+    #         max_tokens=settings.llm_max_tokens,
+    #     )
+    #     return self._parse_response(response.choices[0].message.content)
     async def _call_groq(self, messages: list[dict]) -> dict:
-        from groq import Groq
-        client = Groq(api_key=settings.groq_api_key)
+        from groq import AsyncGroq
+        client = AsyncGroq(api_key=settings.groq_api_key)
         full_messages = [
             {"role": "system", "content": SYSTEM_PROMPT}
         ] + messages
-        response = client.chat.completions.create(
+        response = await client.chat.completions.create(
             model=settings.groq_model,
             messages=full_messages,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
+            timeout=settings.llm_timeout_seconds,
         )
         return self._parse_response(response.choices[0].message.content)
 
