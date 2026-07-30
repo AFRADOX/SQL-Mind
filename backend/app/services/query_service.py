@@ -29,14 +29,17 @@ class QueryService:
         redis=None,
     ) -> QueryResponse:
 
-        # 1. Get schema
+        # 1. Get connection + schema
+        conn = await self.execution_service.conn_service.get_connection(
+            request.connection_id, user_id
+        )
         schema = await self.schema_service.get_schema(
             request.connection_id, user_id, redis
         )
 
         # 2. Call LLM
         llm_result = await self.llm_service.generate_sql(
-            request.natural_language, schema
+            request.natural_language, schema, db_type=conn.db_type
         )
 
         generated_sql = llm_result.get("sql", "")
@@ -48,7 +51,7 @@ class QueryService:
 
         # 3. Validate
         try:
-            safe_sql = self.validator.validate(generated_sql)
+            safe_sql = self.validator.validate(generated_sql, conn.db_type)
             validation_passed = True
         except Exception as e:
             safe_sql = generated_sql

@@ -5,7 +5,7 @@ import Layout from "../components/Layout"
 import api from "../api/client"
 
 const emptyForm = {
-  name: "", host: "", port: 5432,
+  name: "", db_type: "postgres", host: "", port: 5432,
   database_name: "", username: "", password: "",
 }
 
@@ -23,6 +23,14 @@ export default function ConnectionsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  const handleDbTypeChange = (db_type) => {
+    setForm({
+      ...form,
+      db_type,
+      port: db_type === "mysql" ? 3306 : 5432,
+    })
+  }
 
   const handleCreate = async () => {
     setLoading(true)
@@ -77,6 +85,17 @@ export default function ConnectionsPage() {
         {showForm && (
           <div className="bg-surface-800 border border-surface-600 rounded-2xl p-6 mb-6">
             <h2 className="text-sm font-semibold text-white mb-4">New Connection</h2>
+            <div className="mb-4">
+              <label className="block text-xs text-slate-400 mb-1">Database Type</label>
+              <select
+                value={form.db_type}
+                onChange={(e) => handleDbTypeChange(e.target.value)}
+                className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-500"
+              >
+                <option value="postgres">PostgreSQL</option>
+                <option value="mysql">MySQL</option>
+              </select>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               {fields.map(({ label, key, placeholder, type }) => (
                 <div key={key}>
@@ -121,7 +140,10 @@ export default function ConnectionsPage() {
               className="bg-surface-800 border border-surface-600 rounded-2xl p-5 flex items-center justify-between"
             >
               <div>
-                <p className="text-white font-medium">{c.name}</p>
+                <p className="text-white font-medium">
+                  {c.name}
+                  <span className="ml-2 text-xs text-slate-500 uppercase">{c.db_type}</span>
+                </p>
                 <p className="text-slate-400 text-sm">
                   {c.username}@{c.host}:{c.port}/{c.database_name}
                 </p>

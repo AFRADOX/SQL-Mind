@@ -19,11 +19,12 @@ BLOCKED_TYPES = (
 class ValidationService:
     SYSTEM_SCHEMAS = {"pg_catalog", "information_schema"}
 
-    def validate(self, sql: str) -> str:
+    def validate(self, sql: str, db_type: str = "postgres") -> str:
         sql = sql.strip().rstrip(";")
+        dialect = "mysql" if db_type == "mysql" else "postgres"
 
         try:
-            statements = sqlglot.parse(sql, dialect="postgres")
+            statements = sqlglot.parse(sql, dialect=dialect)
         except Exception as e:
             raise UnsafeSQLException(f"SQL parsing failed: {e}")
 

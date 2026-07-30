@@ -27,6 +27,11 @@ class DatabaseConnection(Base, TimestampMixin):
         String(100),
         nullable=False,
     )
+    db_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="postgres",
+    )
     host: Mapped[str] = mapped_column(
         String(255),
         nullable=False,

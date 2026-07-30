@@ -3,11 +3,13 @@
 from __future__ import annotations
 import uuid
 from datetime import datetime
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
 class ConnectionCreateRequest(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
+    db_type: Literal["postgres", "mysql"] = "postgres"
     host: str = Field(..., min_length=1)
     port: int = Field(default=5432, ge=1, le=65535)
     database_name: str = Field(..., min_length=1)
@@ -18,6 +20,7 @@ class ConnectionCreateRequest(BaseModel):
 class ConnectionResponse(BaseModel):
     id: uuid.UUID
     name: str
+    db_type: str
     host: str
     port: int
     database_name: str

@@ -3,6 +3,7 @@
 from __future__ import annotations
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.db_utils import build_dsn
 from app.core.exceptions import NotFoundException
 from app.core.security import decrypt, encrypt
 from app.repositories.connection_repo import ConnectionRepository
@@ -23,6 +24,7 @@ class ConnectionService:
         return await self.repo.create(
             user_id=user_id,
             name=data.name,
+            db_type=data.db_type,
             host=data.host,
             port=data.port,
             database_name=data.database_name,
@@ -38,6 +40,17 @@ class ConnectionService:
             raise NotFoundException("Connection not found.")
         await self.repo.delete(conn)
 
+    # async def test_connection(
+    #     self, conn_id: uuid.UUID, user_id: uuid.UUID
+    # ) -> ConnectionTestResponse:
+    #     conn = await self.repo.get_by_id(conn_id, user_id)
+    #     if not conn:
+    #         raise NotFoundException("Connection not found.")
+    #     plain_password = decrypt(conn.encrypted_password)
+    #     dsn = (
+    #         f"postgresql+asyncpg://{conn.username}:{plain_password}"
+    #         f"@{conn.host}:{conn.port}/{conn.database_name}"
+    #     )
     async def test_connection(
         self, conn_id: uuid.UUID, user_id: uuid.UUID
     ) -> ConnectionTestResponse:
@@ -45,14 +58,15 @@ class ConnectionService:
         if not conn:
             raise NotFoundException("Connection not found.")
         plain_password = decrypt(conn.encrypted_password)
-        dsn = (
-            f"postgresql+asyncpg://{conn.username}:{plain_password}"
-            f"@{conn.host}:{conn.port}/{conn.database_name}"
+        dsn = build_dsn(
+            conn.db_type, conn.username, plain_password,
+            conn.host, conn.port, conn.database_name
         )
         try:
             from sqlalchemy import text
             from sqlalchemy.ext.asyncio import create_async_engine
-            test_engine = create_async_engine(dsn, connect_args={"timeout": 5})
+            timeout_key = "connect_timeout" if conn.db_type == "mysql" else "timeout"
+            test_engine = create_async_engine(dsn, connect_args={timeout_key: 5})
             async with test_engine.connect() as c:
                 await c.execute(text("SELECT 1"))
             await test_engine.dispose()
@@ -61,6 +75,14 @@ class ConnectionService:
             )
         except Exception as e:
             return ConnectionTestResponse(success=False, message=str(e))
+
+    async def get_connection(
+        self, conn_id: uuid.UUID, user_id: uuid.UUID
+    ):
+        conn = await self.repo.get_by_id(conn_id, user_id)
+        if not conn:
+            raise NotFoundException("Connection not found.")
+        return conn
 
     async def get_connection_with_password(
         self, conn_id: uuid.UUID, user_id: uuid.UUID

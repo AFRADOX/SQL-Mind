@@ -6,6 +6,7 @@ import uuid
 from sqlalchemy import inspect, text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from app.core.config import get_settings
+from app.core.db_utils import build_dsn
 from app.core.exceptions import BadRequestException
 from app.schemas.schema import ColumnMeta, DatabaseSchema, ForeignKeyMeta, TableMeta
 from app.services.connection_service import ConnectionService
@@ -29,16 +30,24 @@ class SchemaService:
             if cached:
                 return DatabaseSchema(**json.loads(cached))
 
+        # conn, password = await self.conn_service.get_connection_with_password(
+        #     connection_id, user_id
+        # )
+        # dsn = (
+        #     f"postgresql+asyncpg://{conn.username}:{password}"
+        #     f"@{conn.host}:{conn.port}/{conn.database_name}"
+        # )
         conn, password = await self.conn_service.get_connection_with_password(
             connection_id, user_id
         )
-        dsn = (
-            f"postgresql+asyncpg://{conn.username}:{password}"
-            f"@{conn.host}:{conn.port}/{conn.database_name}"
+        dsn = build_dsn(
+            conn.db_type, conn.username, password,
+            conn.host, conn.port, conn.database_name
         )
         try:
-            engine = create_async_engine(dsn, connect_args={"timeout": 10})
-            schema = await self._introspect(engine)
+            timeout_key = "connect_timeout" if conn.db_type == "mysql" else "timeout"
+            engine = create_async_engine(dsn, connect_args={timeout_key: 10})
+            schema = await self._introspect(engine, conn.db_type)
             await engine.dispose()
         except Exception as e:
             raise BadRequestException(f"Schema introspection failed: {e}")
@@ -51,7 +60,8 @@ class SchemaService:
             )
         return schema
 
-    async def _introspect(self, engine) -> DatabaseSchema:
+    async def _introspect(self, engine, db_type: str = "postgres") -> DatabaseSchema:
+        quote = "`" if db_type == "mysql" else '"'
         tables = []
         async with engine.connect() as conn:
             table_names = await conn.run_sync(
@@ -100,8 +110,8 @@ class SchemaService:
                         try:
                             result = await conn.execute(
                                 text(
-                                    f'SELECT DISTINCT "{col.name}" FROM '
-                                    f'"{table_name}" WHERE "{col.name}" '
+                                    f'SELECT DISTINCT {quote}{col.name}{quote} FROM '
+                                    f'{quote}{table_name}{quote} WHERE {quote}{col.name}{quote} '
                                     f'IS NOT NULL LIMIT 5'
                                 )
                             )

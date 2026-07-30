@@ -36,6 +36,7 @@ class ConnectionRepository:
         self,
         user_id: uuid.UUID,
         name: str,
+        db_type: str,
         host: str,
         port: int,
         database_name: str,
@@ -45,6 +46,7 @@ class ConnectionRepository:
         conn = DatabaseConnection(
             user_id=user_id,
             name=name,
+            db_type=db_type,
             host=host,
             port=port,
             database_name=database_name,
