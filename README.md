@@ -1,7 +1,7 @@
 # SQL-Mind 🧠
 
 > A production-ready Text-to-SQL SaaS platform that converts plain English 
-> questions into optimized PostgreSQL queries using LLaMA 3.3 AI. Features 
+> questions into optimized SQL queries (PostgreSQL & MySQL) using LLaMA 3.3 AI. Features 
 > JWT authentication, encrypted database connections, AST-based SQL validation, 
 > 3-signal confidence scoring, and real-time query execution with a modern dark dashboard.
 
@@ -10,7 +10,7 @@
 ## 🚀 Features
 
 - 🔐 **JWT Authentication** — Secure register/login system
-- 🗄️ **Database Connection Management** — Connect any PostgreSQL database securely
+- 🗄️ **Database Connection Management** — Connect any PostgreSQL or MySQL database securely
 - 🤖 **AI-Powered SQL Generation** — LLaMA 3.3 (via Groq API) converts English to SQL
 - ✅ **SQL Validation** — AST-based parser blocks all non-SELECT statements
 - 📊 **3-Signal Confidence Scoring** — HIGH / MEDIUM / LOW confidence badge
@@ -24,7 +24,7 @@
 | Layer | Technology |
 |-------|-----------|
 | Backend | Python 3.11, FastAPI, SQLAlchemy 2.0 |
-| Database | PostgreSQL 16, Alembic (migrations) |
+| Database | PostgreSQL 16 & MySQL 8+, Alembic (migrations) |
 | AI Engine | Groq API, LLaMA 3.3 70B Versatile |
 | SQL Validation | sqlglot (AST parsing) |
 | Frontend | React.js, Tailwind CSS, Zustand |
@@ -67,12 +67,16 @@
        ▼                ▼
 ┌──────────┐    ┌──────────────┐
 │ Groq AI  │    │  PostgreSQL  │
-│ LLaMA 3.3│    │  Database    │
-│ Generates│    │  Stores:     │
-│ the SQL  │    │  - Users     │
-└──────────┘    │  - Connections│
+│ LLaMA 3.3│    │  (App's own  │
+│ Generates│    │   database)  │
+│ the SQL  │    │  Stores:     │
+└──────────┘    │  - Users     │
+                │  - Connections│
                 │  - History   │
                 └──────────────┘
+                       +
+          User-connected databases can
+             be PostgreSQL or MySQL
 ```
 # SQL-Mind 🧠
 
