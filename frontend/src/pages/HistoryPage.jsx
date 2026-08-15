@@ -11,12 +11,21 @@ const confidenceStyle = (score) => {
 }
 
 export default function HistoryPage() {
-  const [history, setHistory]   = useState([])
-  const [expanded, setExpanded] = useState(null)
+  const [history, setHistory]         = useState([])
+  const [expanded, setExpanded]       = useState(null)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [loadError, setLoadError]     = useState(null)
 
-  useEffect(() => {
-    api.get("/history/").then(({ data }) => setHistory(data))
-  }, [])
+  const load = () => {
+    setPageLoading(true)
+    setLoadError(null)
+    api.get("/history/")
+      .then(({ data }) => setHistory(data))
+      .catch(() => setLoadError("Couldn't load your history. The server may still be waking up — try again in a moment."))
+      .finally(() => setPageLoading(false))
+  }
+
+  useEffect(() => { load() }, [])
 
   return (
     <Layout>
@@ -24,59 +33,81 @@ export default function HistoryPage() {
         <h1 className="text-2xl font-bold text-white mb-1">History</h1>
         <p className="text-slate-400 text-sm mb-8">Your past queries and results.</p>
 
-        <div className="space-y-3">
-          {history.map((h) => (
-            <div
-              key={h.id}
-              className="bg-surface-800 border border-surface-600 rounded-2xl overflow-hidden"
+        {pageLoading && (
+          <div className="text-center py-16 text-slate-500">
+            <p className="text-4xl mb-3 animate-pulse">◷</p>
+            <p>Loading your history…</p>
+            <p className="text-xs mt-1">This can take up to a minute if the server was idle.</p>
+          </div>
+        )}
+
+        {!pageLoading && loadError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+            <p className="text-red-400 text-sm mb-3">{loadError}</p>
+            <button
+              onClick={load}
+              className="bg-surface-700 hover:bg-surface-600 text-white px-4 py-2 rounded-lg text-sm"
             >
-              <button
-                onClick={() => setExpanded(expanded === h.id ? null : h.id)}
-                className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-surface-700/50 transition-colors"
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!pageLoading && !loadError && (
+          <div className="space-y-3">
+            {history.map((h) => (
+              <div
+                key={h.id}
+                className="bg-surface-800 border border-surface-600 rounded-2xl overflow-hidden"
               >
-                <div className="flex-1 min-w-0 mr-4">
-                  <p className="text-white text-sm font-medium truncate">{h.nl_query}</p>
-                  <p className="text-slate-500 text-xs mt-0.5">
-                    {new Date(h.created_at).toLocaleString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${confidenceStyle(h.confidence_score)}`}>
-                    {h.confidence_score}%
-                  </span>
-                  {h.was_executed && (
-                    <span className="px-2 py-0.5 rounded-full text-xs bg-brand-500/10 text-brand-500 border border-brand-500/20">
-                      Executed
-                    </span>
-                  )}
-                  <span className="text-slate-500 text-xs">
-                    {expanded === h.id ? "▲" : "▼"}
-                  </span>
-                </div>
-              </button>
-
-              {expanded === h.id && (
-                <div className="border-t border-surface-600 px-5 py-4">
-                  <pre className="sql-block text-sm text-emerald-300 bg-surface-900 rounded-xl px-4 py-3 overflow-x-auto">
-                    {h.generated_sql}
-                  </pre>
-                  {h.result_row_count !== null && (
-                    <p className="text-xs text-slate-500 mt-2">
-                      {h.result_row_count} rows returned
+                <button
+                  onClick={() => setExpanded(expanded === h.id ? null : h.id)}
+                  className="w-full text-left px-5 py-4 flex items-center justify-between hover:bg-surface-700/50 transition-colors"
+                >
+                  <div className="flex-1 min-w-0 mr-4">
+                    <p className="text-white text-sm font-medium truncate">{h.nl_query}</p>
+                    <p className="text-slate-500 text-xs mt-0.5">
+                      {new Date(h.created_at).toLocaleString()}
                     </p>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold border ${confidenceStyle(h.confidence_score)}`}>
+                      {h.confidence_score}%
+                    </span>
+                    {h.was_executed && (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-brand-500/10 text-brand-500 border border-brand-500/20">
+                        Executed
+                      </span>
+                    )}
+                    <span className="text-slate-500 text-xs">
+                      {expanded === h.id ? "▲" : "▼"}
+                    </span>
+                  </div>
+                </button>
 
-          {history.length === 0 && (
-            <div className="text-center py-16 text-slate-500">
-              <p className="text-4xl mb-3">◷</p>
-              <p>No queries yet. Go ask your database something!</p>
-            </div>
-          )}
-        </div>
+                {expanded === h.id && (
+                  <div className="border-t border-surface-600 px-5 py-4">
+                    <pre className="sql-block text-sm text-emerald-300 bg-surface-900 rounded-xl px-4 py-3 overflow-x-auto">
+                      {h.generated_sql}
+                    </pre>
+                    {h.result_row_count !== null && (
+                      <p className="text-xs text-slate-500 mt-2">
+                        {h.result_row_count} rows returned
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {history.length === 0 && (
+              <div className="text-center py-16 text-slate-500">
+                <p className="text-4xl mb-3">◷</p>
+                <p>No queries yet. Go ask your database something!</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Layout>
   )

@@ -16,10 +16,19 @@ export default function ConnectionsPage() {
   const [testing, setTesting]         = useState(null)
   const [testResult, setTestResult]   = useState({})
   const [loading, setLoading]         = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
+  const [loadError, setLoadError]     = useState(null)
 
   const load = async () => {
-    const { data } = await api.get("/connections/")
-    setConnections(data)
+    setLoadError(null)
+    try {
+      const { data } = await api.get("/connections/")
+      setConnections(data)
+    } catch (err) {
+      setLoadError("Couldn't load your connections. The server may still be waking up — try again in a moment.")
+    } finally {
+      setPageLoading(false)
+    }
   }
 
   useEffect(() => { load() }, [])
@@ -133,51 +142,73 @@ export default function ConnectionsPage() {
           </div>
         )}
 
-        <div className="space-y-3">
-          {connections.map((c) => (
-            <div
-              key={c.id}
-              className="bg-surface-800 border border-surface-600 rounded-2xl p-5 flex items-center justify-between"
-            >
-              <div>
-                <p className="text-white font-medium">
-                  {c.name}
-                  <span className="ml-2 text-xs text-slate-500 uppercase">{c.db_type}</span>
-                </p>
-                <p className="text-slate-400 text-sm">
-                  {c.username}@{c.host}:{c.port}/{c.database_name}
-                </p>
-                {testResult[c.id] && (
-                  <p className={`text-xs mt-1 ${testResult[c.id].success ? "text-emerald-400" : "text-red-400"}`}>
-                    {testResult[c.id].message}
-                  </p>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => handleTest(c.id)}
-                  disabled={testing === c.id}
-                  className="bg-surface-700 hover:bg-surface-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
-                >
-                  {testing === c.id ? "Testing..." : "Test"}
-                </button>
-                <button
-                  onClick={() => handleDelete(c.id)}
-                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
+        {pageLoading && (
+          <div className="text-center py-16 text-slate-500">
+            <p className="text-4xl mb-3 animate-pulse">⛁</p>
+            <p>Loading your connections…</p>
+            <p className="text-xs mt-1">This can take up to a minute if the server was idle.</p>
+          </div>
+        )}
 
-          {connections.length === 0 && (
-            <div className="text-center py-16 text-slate-500">
-              <p className="text-4xl mb-3">⛁</p>
-              <p>No connections yet. Add your first database above.</p>
-            </div>
-          )}
-        </div>
+        {!pageLoading && loadError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
+            <p className="text-red-400 text-sm mb-3">{loadError}</p>
+            <button
+              onClick={() => { setPageLoading(true); load() }}
+              className="bg-surface-700 hover:bg-surface-600 text-white px-4 py-2 rounded-lg text-sm"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
+        {!pageLoading && !loadError && (
+          <div className="space-y-3">
+            {connections.map((c) => (
+              <div
+                key={c.id}
+                className="bg-surface-800 border border-surface-600 rounded-2xl p-5 flex items-center justify-between"
+              >
+                <div>
+                  <p className="text-white font-medium">
+                    {c.name}
+                    <span className="ml-2 text-xs text-slate-500 uppercase">{c.db_type}</span>
+                  </p>
+                  <p className="text-slate-400 text-sm">
+                    {c.username}@{c.host}:{c.port}/{c.database_name}
+                  </p>
+                  {testResult[c.id] && (
+                    <p className={`text-xs mt-1 ${testResult[c.id].success ? "text-emerald-400" : "text-red-400"}`}>
+                      {testResult[c.id].message}
+                    </p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleTest(c.id)}
+                    disabled={testing === c.id}
+                    className="bg-surface-700 hover:bg-surface-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
+                  >
+                    {testing === c.id ? "Testing..." : "Test"}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.id)}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 px-3 py-1.5 rounded-lg text-xs transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+
+            {connections.length === 0 && (
+              <div className="text-center py-16 text-slate-500">
+                <p className="text-4xl mb-3">⛁</p>
+                <p>No connections yet. Add your first database above.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </Layout>
   )

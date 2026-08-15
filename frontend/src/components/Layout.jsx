@@ -1,7 +1,9 @@
 // src/components/Layout.jsx
 
+import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
+import api from "../api/client"
 
 const navItems = [
   { path: "/dashboard",   label: "Dashboard",   icon: "⊞" },
@@ -12,12 +14,44 @@ const navItems = [
 
 export default function Layout({ children }) {
   const { pathname } = useLocation()
-  const { user, logout } = useAuthStore()
+  const { user, token, setAuth, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [checkingAuth, setCheckingAuth] = useState(!user && !!token)
+
+  useEffect(() => {
+    // On a hard refresh, the token survives in localStorage but the
+    // in-memory `user` object doesn't. Re-fetch it here so the sidebar,
+    // dashboard greeting, etc. aren't stuck showing blank/null forever.
+    if (!user && token) {
+      api.get("/auth/me")
+        .then(({ data }) => setAuth(data, token))
+        .catch(() => {
+          // token is invalid/expired — force a real re-login
+          logout()
+          navigate("/login")
+        })
+        .finally(() => setCheckingAuth(false))
+    } else {
+      setCheckingAuth(false)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleLogout = () => {
     logout()
     navigate("/login")
+  }
+
+  if (checkingAuth) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-surface-900">
+        <div className="text-center text-slate-500">
+          <p className="text-3xl mb-3 animate-pulse">S</p>
+          <p className="text-sm">Restoring your session…</p>
+          <p className="text-xs mt-1">This can take up to a minute if the server was idle.</p>
+        </div>
+      </div>
+    )
   }
 
   return (
