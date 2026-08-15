@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Layout from "../components/Layout"
 import api from "../api/client"
+import { useConnectionsStore } from "../store/connectionsStore"
 
 const emptyForm = {
   name: "", db_type: "postgres", host: "", port: 5432,
@@ -10,28 +11,18 @@ const emptyForm = {
 }
 
 export default function ConnectionsPage() {
-  const [connections, setConnections] = useState([])
-  const [showForm, setShowForm]       = useState(false)
-  const [form, setForm]               = useState(emptyForm)
-  const [testing, setTesting]         = useState(null)
-  const [testResult, setTestResult]   = useState({})
-  const [loading, setLoading]         = useState(false)
-  const [pageLoading, setPageLoading] = useState(true)
-  const [loadError, setLoadError]     = useState(null)
+  const {
+    connections, loaded, loading, error,
+    fetchConnections, addConnection, removeConnection,
+  } = useConnectionsStore()
 
-  const load = async () => {
-    setLoadError(null)
-    try {
-      const { data } = await api.get("/connections/")
-      setConnections(data)
-    } catch (err) {
-      setLoadError("Couldn't load your connections. The server may still be waking up — try again in a moment.")
-    } finally {
-      setPageLoading(false)
-    }
-  }
+  const [showForm, setShowForm]     = useState(false)
+  const [form, setForm]             = useState(emptyForm)
+  const [testing, setTesting]       = useState(null)
+  const [testResult, setTestResult] = useState({})
+  const [saving, setSaving]         = useState(false)
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { fetchConnections() }, [])
 
   const handleDbTypeChange = (db_type) => {
     setForm({
@@ -42,14 +33,14 @@ export default function ConnectionsPage() {
   }
 
   const handleCreate = async () => {
-    setLoading(true)
+    setSaving(true)
     try {
-      await api.post("/connections/", form)
+      const { data } = await api.post("/connections/", form)
+      addConnection(data)
       setShowForm(false)
       setForm(emptyForm)
-      load()
     } finally {
-      setLoading(false)
+      setSaving(false)
     }
   }
 
@@ -63,7 +54,7 @@ export default function ConnectionsPage() {
   const handleDelete = async (id) => {
     if (!confirm("Delete this connection?")) return
     await api.delete(`/connections/${id}`)
-    load()
+    removeConnection(id)
   }
 
   const fields = [
@@ -74,6 +65,11 @@ export default function ConnectionsPage() {
     { label: "Username",        key: "username",      placeholder: "postgres" },
     { label: "Password",        key: "password",      placeholder: "••••••", type: "password" },
   ]
+
+  // Only show a full-page loading state the very first time, before
+  // anything has ever loaded. On repeat visits (loaded === true), the
+  // cached list renders instantly — no flash on every tab switch.
+  const showInitialLoading = loading && !loaded
 
   return (
     <Layout>
@@ -127,10 +123,10 @@ export default function ConnectionsPage() {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={handleCreate}
-                disabled={loading}
+                disabled={saving}
                 className="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-semibold disabled:opacity-50"
               >
-                {loading ? "Saving..." : "Save"}
+                {saving ? "Saving..." : "Save"}
               </button>
               <button
                 onClick={() => setShowForm(false)}
@@ -142,7 +138,7 @@ export default function ConnectionsPage() {
           </div>
         )}
 
-        {pageLoading && (
+        {showInitialLoading && (
           <div className="text-center py-16 text-slate-500">
             <p className="text-4xl mb-3 animate-pulse">⛁</p>
             <p>Loading your connections…</p>
@@ -150,11 +146,11 @@ export default function ConnectionsPage() {
           </div>
         )}
 
-        {!pageLoading && loadError && (
+        {!showInitialLoading && error && !loaded && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
-            <p className="text-red-400 text-sm mb-3">{loadError}</p>
+            <p className="text-red-400 text-sm mb-3">{error}</p>
             <button
-              onClick={() => { setPageLoading(true); load() }}
+              onClick={() => fetchConnections(true)}
               className="bg-surface-700 hover:bg-surface-600 text-white px-4 py-2 rounded-lg text-sm"
             >
               Retry
@@ -162,7 +158,7 @@ export default function ConnectionsPage() {
           </div>
         )}
 
-        {!pageLoading && !loadError && (
+        {!showInitialLoading && loaded && (
           <div className="space-y-3">
             {connections.map((c) => (
               <div

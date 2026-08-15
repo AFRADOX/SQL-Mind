@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import Layout from "../components/Layout"
-import api from "../api/client"
+import { useHistoryStore } from "../store/historyStore"
 
 const confidenceStyle = (score) => {
   if (score >= 80) return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
@@ -11,21 +11,12 @@ const confidenceStyle = (score) => {
 }
 
 export default function HistoryPage() {
-  const [history, setHistory]         = useState([])
-  const [expanded, setExpanded]       = useState(null)
-  const [pageLoading, setPageLoading] = useState(true)
-  const [loadError, setLoadError]     = useState(null)
+  const { history, loaded, loading, error, fetchHistory } = useHistoryStore()
+  const [expanded, setExpanded] = useState(null)
 
-  const load = () => {
-    setPageLoading(true)
-    setLoadError(null)
-    api.get("/history/")
-      .then(({ data }) => setHistory(data))
-      .catch(() => setLoadError("Couldn't load your history. The server may still be waking up — try again in a moment."))
-      .finally(() => setPageLoading(false))
-  }
+  useEffect(() => { fetchHistory() }, [])
 
-  useEffect(() => { load() }, [])
+  const showInitialLoading = loading && !loaded
 
   return (
     <Layout>
@@ -33,7 +24,7 @@ export default function HistoryPage() {
         <h1 className="text-2xl font-bold text-white mb-1">History</h1>
         <p className="text-slate-400 text-sm mb-8">Your past queries and results.</p>
 
-        {pageLoading && (
+        {showInitialLoading && (
           <div className="text-center py-16 text-slate-500">
             <p className="text-4xl mb-3 animate-pulse">◷</p>
             <p>Loading your history…</p>
@@ -41,11 +32,11 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {!pageLoading && loadError && (
+        {!showInitialLoading && error && !loaded && (
           <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-6 text-center">
-            <p className="text-red-400 text-sm mb-3">{loadError}</p>
+            <p className="text-red-400 text-sm mb-3">{error}</p>
             <button
-              onClick={load}
+              onClick={() => fetchHistory(true)}
               className="bg-surface-700 hover:bg-surface-600 text-white px-4 py-2 rounded-lg text-sm"
             >
               Retry
@@ -53,7 +44,7 @@ export default function HistoryPage() {
           </div>
         )}
 
-        {!pageLoading && !loadError && (
+        {!showInitialLoading && loaded && (
           <div className="space-y-3">
             {history.map((h) => (
               <div

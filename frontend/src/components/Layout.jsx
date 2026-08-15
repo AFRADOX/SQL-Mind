@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
+import { useConnectionsStore } from "../store/connectionsStore"
+import { useHistoryStore } from "../store/historyStore"
 import api from "../api/client"
 
 const navItems = [
@@ -15,6 +17,8 @@ const navItems = [
 export default function Layout({ children }) {
   const { pathname } = useLocation()
   const { user, token, setAuth, logout } = useAuthStore()
+  const resetConnections = useConnectionsStore((s) => s.reset)
+  const resetHistory = useHistoryStore((s) => s.reset)
   const navigate = useNavigate()
   const [checkingAuth, setCheckingAuth] = useState(!user && !!token)
 
@@ -26,8 +30,9 @@ export default function Layout({ children }) {
       api.get("/auth/me")
         .then(({ data }) => setAuth(data, token))
         .catch(() => {
-          // token is invalid/expired — force a real re-login
           logout()
+          resetConnections()
+          resetHistory()
           navigate("/login")
         })
         .finally(() => setCheckingAuth(false))
@@ -39,6 +44,8 @@ export default function Layout({ children }) {
 
   const handleLogout = () => {
     logout()
+    resetConnections()
+    resetHistory()
     navigate("/login")
   }
 

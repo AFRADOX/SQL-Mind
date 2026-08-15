@@ -1,8 +1,9 @@
 // src/pages/QueryPage.jsx
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Layout from "../components/Layout"
 import api from "../api/client"
+import { useConnectionsStore } from "../store/connectionsStore"
 
 const confidenceStyle = (level) => {
   if (level === "HIGH")   return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
@@ -11,22 +12,23 @@ const confidenceStyle = (level) => {
 }
 
 export default function QueryPage() {
-  const [connections, setConnections]   = useState([])
+  const { connections, loaded, fetchConnections } = useConnectionsStore()
   const [selectedConn, setSelectedConn] = useState("")
   const [question, setQuestion]         = useState("")
   const [execute, setExecute]           = useState(true)
   const [loading, setLoading]           = useState(false)
   const [result, setResult]             = useState(null)
   const [error, setError]               = useState("")
-  const [connLoaded, setConnLoaded]     = useState(false)
 
-  const loadConnections = async () => {
-    if (connLoaded) return
-    const { data } = await api.get("/connections/")
-    setConnections(data)
-    if (data.length > 0) setSelectedConn(data[0].id)
-    setConnLoaded(true)
-  }
+  useEffect(() => { fetchConnections() }, [])
+
+  // Once connections load, default to the first one — but only if
+  // nothing is selected yet, so we don't clobber a choice you already made.
+  useEffect(() => {
+    if (loaded && connections.length > 0 && !selectedConn) {
+      setSelectedConn(connections[0].id)
+    }
+  }, [loaded, connections])
 
   const handleSubmit = async () => {
     if (!selectedConn || !question.trim()) return
@@ -62,11 +64,10 @@ export default function QueryPage() {
               <select
                 value={selectedConn}
                 onChange={(e) => setSelectedConn(e.target.value)}
-                onFocus={loadConnections}
                 className="w-full bg-surface-700 border border-surface-600 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-brand-500"
               >
                 {connections.length === 0
-                  ? <option value="">Select a connection...</option>
+                  ? <option value="">{loaded ? "No connections yet" : "Loading connections..."}</option>
                   : connections.map((c) => (
                       <option key={c.id} value={c.id}>
                         {c.name} — {c.host}/{c.database_name}
