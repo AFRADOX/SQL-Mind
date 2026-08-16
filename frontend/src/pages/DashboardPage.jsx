@@ -1,5 +1,3 @@
-// src/pages/DashboardPage.jsx
-
 import { useEffect } from "react"
 import Layout from "../components/Layout"
 import { useAuthStore } from "../store/authStore"
@@ -24,6 +22,10 @@ export default function DashboardPage() {
 
   const anyLoading = (connLoading && !connLoaded) || (histLoading && !histLoaded)
   const anyError = (connError && !connLoaded) || (histError && !histLoaded)
+
+  const avgConfidence = history.length > 0
+  ? Math.round(history.reduce((sum, h) => sum + h.confidence_score, 0) / history.length)
+  : null
 
   return (
     <Layout>
@@ -53,7 +55,8 @@ export default function DashboardPage() {
           {[
             { label: "Connections",    value: anyLoading ? "…" : connections.length, icon: "⛁", color: "text-brand-500" },
             { label: "Queries run",    value: anyLoading ? "…" : history.length,     icon: "✦", color: "text-emerald-400" },
-            { label: "Confidence avg", value: "—",                                   icon: "◎", color: "text-amber-400" },
+            // { label: "Confidence avg", value: "—",                     icon: "◎", color: "text-amber-400" },
+            { label: "Confidence avg", value: anyLoading ? "…" : (avgConfidence !== null ? `${avgConfidence}%` : "—"), icon: "◎", color: "text-amber-400" },
           ].map(({ label, value, icon, color }) => (
             <div
               key={label}
