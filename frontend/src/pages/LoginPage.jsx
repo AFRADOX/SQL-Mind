@@ -57,89 +57,131 @@ export default function LoginPage() {
     }
   }
 
+  const isLogin = tab === "login"
+
   return (
-    <div className="min-h-screen bg-surface-900 flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold">
-              S
+    <div className="relative min-h-screen bg-[#0a0511] flex items-center justify-center px-4 overflow-hidden">
+      {/* Ambient glow field — same device as the reference: soft ribboned
+          purple light behind a glass panel, kept subtle and out of focus */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 -left-32 w-[32rem] h-[32rem] rounded-full bg-purple-700/30 blur-[110px]" />
+        <div className="absolute top-1/3 -right-40 w-[28rem] h-[28rem] rounded-full bg-fuchsia-600/20 blur-[100px]" />
+        <div className="absolute bottom-0 left-1/4 w-[26rem] h-[26rem] rounded-full bg-indigo-600/20 blur-[100px]" />
+        <svg
+          className="absolute inset-0 w-full h-full opacity-[0.35]"
+          viewBox="0 0 700 900"
+          preserveAspectRatio="xMidYMid slice"
+        >
+          <defs>
+            <linearGradient id="ribbon" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#4c1d95" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M -50 150 C 150 50, 250 250, 450 180 S 750 100, 800 300 S 550 550, 650 750"
+            stroke="url(#ribbon)"
+            strokeWidth="70"
+            strokeLinecap="round"
+            fill="none"
+          />
+        </svg>
+      </div>
+
+      <div className="relative w-full max-w-sm">
+        {/* Glass card */}
+        <div className="relative rounded-[2rem] border border-white/15 bg-white/[0.06] backdrop-blur-2xl shadow-[0_8px_60px_rgba(147,51,234,0.25)] px-8 py-10">
+          {/* Logo mark */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 via-purple-700 to-indigo-800 flex items-center justify-center shadow-[0_0_25px_rgba(168,85,247,0.5)] mb-3">
+              <span className="text-white text-2xl font-bold tracking-tight">S</span>
             </div>
-            <span className="text-xl font-bold text-white">SQLMind</span>
-          </div>
-          <p className="text-slate-400 text-sm">Query your database in plain English</p>
-        </div>
-
-        <div className="bg-surface-800 border border-surface-600 rounded-2xl p-8">
-          <div className="flex bg-surface-700 rounded-lg p-1 mb-6">
-            {["login", "register"].map((t) => (
-              <button
-                key={t}
-                onClick={() => setTab(t)}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-all ${
-                  tab === t
-                    ? "bg-brand-500 text-white shadow"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {t === "login" ? "Sign In" : "Create Account"}
-              </button>
-            ))}
+            <span className="text-white text-sm font-semibold tracking-[0.25em] uppercase">
+              SQLMind
+            </span>
           </div>
 
-          <div className="space-y-4">
-            {tab === "register" && (
+          <h1 className="text-center text-white text-xl font-semibold mb-8">
+            {isLogin ? "Welcome Back" : "Create Your Account"}
+          </h1>
+
+          <div className="space-y-5">
+            {!isLogin && (
               <div>
-                <label className="block text-sm text-slate-400 mb-1">Full Name</label>
+                <label className="block text-xs text-purple-200/70 mb-1.5 ml-1">
+                  Full Name
+                </label>
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Your Name"
-                  className="w-full bg-surface-700 border border-surface-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                  className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-purple-400/70 focus:bg-white/[0.08] transition-colors"
                 />
               </div>
             )}
 
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Email</label>
+              <label className="block text-xs text-purple-200/70 mb-1.5 ml-1">
+                Email address
+              </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full bg-surface-700 border border-surface-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-purple-400/70 focus:bg-white/[0.08] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-1">Password</label>
+              <label className="block text-xs text-purple-200/70 mb-1.5 ml-1">
+                Password
+              </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full bg-surface-700 border border-surface-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-brand-500"
+                className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-purple-400/70 focus:bg-white/[0.08] transition-colors"
               />
             </div>
 
+            {isLogin && (
+              <div className="text-right -mt-2">
+                <button
+                  type="button"
+                  className="text-xs text-purple-200/70 hover:text-purple-100 transition-colors"
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
+
             {error && (
-              <p className="text-red-400 text-sm bg-red-400/10 px-3 py-2 rounded-lg">
+              <p className="text-red-300 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
                 {error}
               </p>
             )}
 
             <button
-              onClick={tab === "login" ? handleLogin : handleRegister}
+              onClick={isLogin ? handleLogin : handleRegister}
               disabled={loading}
-              className="w-full bg-brand-500 hover:bg-brand-600 text-white font-semibold py-3 rounded-lg transition-colors disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-semibold py-3.5 rounded-xl transition-all shadow-[0_0_25px_rgba(168,85,247,0.4)] disabled:opacity-50 disabled:shadow-none"
             >
-              {loading
-                ? "Please wait..."
-                : tab === "login"
-                ? "Sign In"
-                : "Create Account"}
+              {loading ? "Please wait..." : isLogin ? "Login" : "Create Account"}
             </button>
           </div>
+
+          <p className="text-center text-sm text-white/50 mt-7">
+            {isLogin ? "Are you new here? " : "Already have an account? "}
+            <button
+              type="button"
+              onClick={() => setTab(isLogin ? "register" : "login")}
+              className="text-purple-300 font-semibold hover:text-purple-200 transition-colors"
+            >
+              {isLogin ? "Sign Up" : "Sign In"}
+            </button>
+          </p>
         </div>
       </div>
     </div>
