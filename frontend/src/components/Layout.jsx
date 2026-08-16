@@ -1,10 +1,9 @@
-// src/components/Layout.jsx
-
 import { useEffect, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import { useAuthStore } from "../store/authStore"
 import { useConnectionsStore } from "../store/connectionsStore"
 import { useHistoryStore } from "../store/historyStore"
+import { useQueryPageStore } from "../store/queryPageStore"
 import api from "../api/client"
 
 const navItems = [
@@ -19,13 +18,11 @@ export default function Layout({ children }) {
   const { user, token, setAuth, logout } = useAuthStore()
   const resetConnections = useConnectionsStore((s) => s.reset)
   const resetHistory = useHistoryStore((s) => s.reset)
+  const resetQueryPage = useQueryPageStore((s) => s.reset)
   const navigate = useNavigate()
   const [checkingAuth, setCheckingAuth] = useState(!user && !!token)
 
   useEffect(() => {
-    // On a hard refresh, the token survives in localStorage but the
-    // in-memory `user` object doesn't. Re-fetch it here so the sidebar,
-    // dashboard greeting, etc. aren't stuck showing blank/null forever.
     if (!user && token) {
       api.get("/auth/me")
         .then(({ data }) => setAuth(data, token))
@@ -33,6 +30,7 @@ export default function Layout({ children }) {
           logout()
           resetConnections()
           resetHistory()
+          resetQueryPage()
           navigate("/login")
         })
         .finally(() => setCheckingAuth(false))
@@ -46,6 +44,7 @@ export default function Layout({ children }) {
     logout()
     resetConnections()
     resetHistory()
+    resetQueryPage()
     navigate("/login")
   }
 

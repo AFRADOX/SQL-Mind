@@ -12,15 +12,13 @@ const emptyForm = {
 
 export default function ConnectionsPage() {
   const {
-    connections, loaded, loading, error,
-    fetchConnections, addConnection, removeConnection,
+    connections, loaded, loading, error, testResults, testing,
+    fetchConnections, addConnection, removeConnection, testConnection,
   } = useConnectionsStore()
 
-  const [showForm, setShowForm]     = useState(false)
-  const [form, setForm]             = useState(emptyForm)
-  const [testing, setTesting]       = useState(null)
-  const [testResult, setTestResult] = useState({})
-  const [saving, setSaving]         = useState(false)
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm]         = useState(emptyForm)
+  const [saving, setSaving]     = useState(false)
 
   useEffect(() => { fetchConnections() }, [])
 
@@ -44,13 +42,6 @@ export default function ConnectionsPage() {
     }
   }
 
-  const handleTest = async (id) => {
-    setTesting(id)
-    const { data } = await api.post(`/connections/${id}/test`)
-    setTestResult((prev) => ({ ...prev, [id]: data }))
-    setTesting(null)
-  }
-
   const handleDelete = async (id) => {
     if (!confirm("Delete this connection?")) return
     await api.delete(`/connections/${id}`)
@@ -66,9 +57,6 @@ export default function ConnectionsPage() {
     { label: "Password",        key: "password",      placeholder: "••••••", type: "password" },
   ]
 
-  // Only show a full-page loading state the very first time, before
-  // anything has ever loaded. On repeat visits (loaded === true), the
-  // cached list renders instantly — no flash on every tab switch.
   const showInitialLoading = loading && !loaded
 
   return (
@@ -173,15 +161,16 @@ export default function ConnectionsPage() {
                   <p className="text-slate-400 text-sm">
                     {c.username}@{c.host}:{c.port}/{c.database_name}
                   </p>
-                  {testResult[c.id] && (
-                    <p className={`text-xs mt-1 ${testResult[c.id].success ? "text-emerald-400" : "text-red-400"}`}>
-                      {testResult[c.id].message}
+                  {testResults[c.id] && (
+                    <p className={`text-xs mt-1 flex items-center gap-1 ${testResults[c.id].success ? "text-emerald-400" : "text-red-400"}`}>
+                      <span>{testResults[c.id].success ? "●" : "●"}</span>
+                      {testResults[c.id].message}
                     </p>
                   )}
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleTest(c.id)}
+                    onClick={() => testConnection(c.id)}
                     disabled={testing === c.id}
                     className="bg-surface-700 hover:bg-surface-600 text-slate-300 px-3 py-1.5 rounded-lg text-xs transition-colors disabled:opacity-50"
                   >

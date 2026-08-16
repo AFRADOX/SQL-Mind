@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Layout from "../components/Layout"
 import api from "../api/client"
 import { useConnectionsStore } from "../store/connectionsStore"
+import { useQueryPageStore } from "../store/queryPageStore"
 
 const confidenceStyle = (level) => {
   if (level === "HIGH")   return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
@@ -13,17 +14,18 @@ const confidenceStyle = (level) => {
 
 export default function QueryPage() {
   const { connections, loaded, fetchConnections } = useConnectionsStore()
-  const [selectedConn, setSelectedConn] = useState("")
-  const [question, setQuestion]         = useState("")
-  const [execute, setExecute]           = useState(true)
-  const [loading, setLoading]           = useState(false)
-  const [result, setResult]             = useState(null)
-  const [error, setError]               = useState("")
+  const {
+    selectedConn, question, execute, result, error,
+    setSelectedConn, setQuestion, setExecute, setResult, setError,
+  } = useQueryPageStore()
+
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => { fetchConnections() }, [])
 
-  // Once connections load, default to the first one — but only if
-  // nothing is selected yet, so we don't clobber a choice you already made.
+  // Default to the first connection only if nothing is selected yet —
+  // never overwrite a choice that's already been made (including one
+  // restored from the store after navigating back to this page).
   useEffect(() => {
     if (loaded && connections.length > 0 && !selectedConn) {
       setSelectedConn(connections[0].id)

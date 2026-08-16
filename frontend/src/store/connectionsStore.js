@@ -6,10 +6,9 @@ export const useConnectionsStore = create((set, get) => ({
   loaded: false,
   loading: false,
   error: null,
+  testResults: {},   // { [connectionId]: { success, message } } — persists across navigation
+  testing: null,      // which connection id is currently being tested
 
-  // Fetches only if not already loaded, unless force=true.
-  // This is what stops the "loading..." flash every time you switch tabs —
-  // once fetched once, later calls just reuse the cached list.
   fetchConnections: async (force = false) => {
     if (get().loaded && !force) return
     set({ loading: true, error: null })
@@ -28,8 +27,33 @@ export const useConnectionsStore = create((set, get) => ({
     set((state) => ({ connections: [...state.connections, conn] })),
 
   removeConnection: (id) =>
-    set((state) => ({ connections: state.connections.filter((c) => c.id !== id) })),
+    set((state) => {
+      const testResults = { ...state.testResults }
+      delete testResults[id]
+      return {
+        connections: state.connections.filter((c) => c.id !== id),
+        testResults,
+      }
+    }),
 
-  // Call this on logout so the next user's session doesn't see stale data.
-  reset: () => set({ connections: [], loaded: false, loading: false, error: null }),
+  testConnection: async (id) => {
+    set({ testing: id })
+    try {
+      const { data } = await api.post(`/connections/${id}/test`)
+      set((state) => ({
+        testResults: { ...state.testResults, [id]: data },
+        testing: null,
+      }))
+    } catch (err) {
+      set((state) => ({
+        testResults: {
+          ...state.testResults,
+          [id]: { success: false, message: "Test failed — couldn't reach the server." },
+        },
+        testing: null,
+      }))
+    }
+  },
+
+  reset: () => set({ connections: [], loaded: false, loading: false, error: null, testResults: {}, testing: null }),
 }))
