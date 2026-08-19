@@ -5,6 +5,7 @@ import Layout from "../components/Layout"
 import api from "../api/client"
 import { useConnectionsStore } from "../store/connectionsStore"
 import { useQueryPageStore } from "../store/queryPageStore"
+import { useHistoryStore } from "../store/historyStore"
 
 const confidenceStyle = (level) => {
   if (level === "HIGH")   return "text-emerald-400 bg-emerald-400/10 border-emerald-400/20"
@@ -18,38 +19,56 @@ export default function QueryPage() {
     selectedConn, question, execute, result, error,
     setSelectedConn, setQuestion, setExecute, setResult, setError,
   } = useQueryPageStore()
+  const resetHistory = useHistoryStore((s) => s.reset)
 
   const [loading, setLoading] = useState(false)
+  const [running, setRunning] = useState(false)
 
   useEffect(() => { fetchConnections() }, [])
 
-  // Default to the first connection only if nothing is selected yet —
-  // never overwrite a choice that's already been made (including one
-  // restored from the store after navigating back to this page).
   useEffect(() => {
     if (loaded && connections.length > 0 && !selectedConn) {
       setSelectedConn(connections[0].id)
     }
   }, [loaded, connections])
 
-  const handleSubmit = async () => {
+  const runQuery = async (forceExecute) => {
     if (!selectedConn || !question.trim()) return
-    setLoading(true)
+    const isRerun = forceExecute && result && !result.execution_result
+    isRerun ? setRunning(true) : setLoading(true)
     setError("")
-    setResult(null)
+    if (!isRerun) setResult(null)
     try {
       const { data } = await api.post("/query/", {
         connection_id: selectedConn,
         natural_language: question,
-        execute,
+        execute: forceExecute ?? execute,
       })
       setResult(data)
+      // A new query (successful or not) invalidates the cached history
+      // list, so the History page re-fetches instead of showing stale data.
+      resetHistory()
     } catch (e) {
-      setError(e.response?.data?.detail ?? "Query failed.")
+      // Network-level failures (e.g. CORS/backend crash) don't have a
+      // response body — distinguish that from a real API error message.
+      if (!e.response) {
+        setError("Couldn't reach the server. It may still be waking up, or the request was blocked — try again in a moment.")
+      } else {
+        setError(e.response?.data?.detail ?? "Query failed.")
+      }
     } finally {
       setLoading(false)
+      setRunning(false)
     }
   }
+
+  const handleSubmit = () => runQuery(execute)
+  const handleRunNow = () => runQuery(true)
+
+  // Show a manual "Run Query" button whenever we have a generated query
+  // that hasn't been executed yet — covers both "Auto-execute was off"
+  // and "auto-execute attempted but confidence was too low to run".
+  const canRunManually = result && !result.execution_result && !loading
 
   return (
     <Layout>
@@ -128,6 +147,15 @@ export default function QueryPage() {
                   AMBIGUOUS
                 </span>
               )}
+              {canRunManually && (
+                <button
+                  onClick={handleRunNow}
+                  disabled={running}
+                  className="ml-auto bg-brand-500 hover:bg-brand-600 text-white px-4 py-1.5 rounded-full text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  {running ? "Running..." : "▶ Run Query"}
+                </button>
+              )}
             </div>
 
             <div className="bg-surface-800 border border-surface-600 rounded-2xl overflow-hidden">
@@ -172,6 +200,12 @@ export default function QueryPage() {
                   Clarification needed
                 </p>
                 <p className="text-sm text-amber-300">{result.clarifying_question}</p>
+              </div>
+            )}
+
+            {!result.execution_result && !canRunManually && (
+              <div className="bg-surface-800 border border-surface-600 rounded-2xl p-5 text-sm text-slate-400">
+                This query wasn't executed — confidence was too low for auto-run, or an error occurred.
               </div>
             )}
 

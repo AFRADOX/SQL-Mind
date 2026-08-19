@@ -38,9 +38,34 @@ class QueryService:
         )
 
         # 2. Call LLM
-        llm_result = await self.llm_service.generate_sql(
-            request.natural_language, schema, db_type=conn.db_type
-        )
+        try:
+            llm_result = await self.llm_service.generate_sql(
+                request.natural_language, schema, db_type=conn.db_type
+            )
+        except Exception as e:
+            # Log the failed attempt to history instead of losing it entirely
+            history_entry = await self.history_repo.create(
+                user_id=user_id,
+                connection_id=request.connection_id,
+                nl_query=request.natural_language,
+                generated_sql="",
+                confidence_score=0,
+                explanation=f"LLM generation failed: {e}",
+                was_executed=False,
+                result_row_count=None,
+                error_message=str(e),
+            )
+            return QueryResponse(
+                query_id=history_entry.id,
+                natural_language=request.natural_language,
+                generated_sql="",
+                explanation=f"Failed to generate SQL: {e}",
+                confidence={"score": 0, "level": "LOW"},
+                assumptions=[],
+                ambiguous=False,
+                clarifying_question=None,
+                execution_result=None,
+            )
 
         generated_sql = llm_result.get("sql", "")
         llm_confidence = llm_result.get("confidence", 50)

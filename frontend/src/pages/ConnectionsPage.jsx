@@ -65,7 +65,7 @@ export default function ConnectionsPage() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-white mb-1">Connections</h1>
-            <p className="text-slate-400 text-sm">Manage your PostgreSQL database connections.</p>
+            <p className="text-slate-400 text-sm">Manage your PostgreSQL and MySQL database connections.</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
