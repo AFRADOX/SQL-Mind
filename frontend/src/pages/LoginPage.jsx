@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [slowNotice, setSlowNotice] = useState(false)
+  const [showResetNotice, setShowResetNotice] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
 
@@ -38,6 +39,11 @@ export default function LoginPage() {
       setSlowNotice(false)
     }
   }
+
+  const handleForgotPassword = () => {
+  setShowResetNotice(true)
+  setTimeout(() => setShowResetNotice(false), 2500)
+}
 
   const handleLogin = async () => {
     setLoading(true)
@@ -148,6 +154,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                  onFocus={() => setShowResetNotice(false)}
                 placeholder="you@example.com"
                 className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-purple-400/70 focus:bg-white/[0.08] transition-colors"
               />
@@ -161,12 +168,13 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                  onFocus={() => setShowResetNotice(false)}
                 placeholder="••••••••"
                 className="w-full bg-white/[0.04] border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-purple-400/70 focus:bg-white/[0.08] transition-colors"
               />
             </div>
 
-            {isLogin && (
+            {/* {isLogin && (
               <div className="text-right -mt-2">
                 <button
                   type="button"
@@ -175,7 +183,32 @@ export default function LoginPage() {
                   Forgot Password?
                 </button>
               </div>
-            )}
+            )} */}
+
+            {isLogin && (
+  <div className="relative text-right -mt-2">
+    <button
+      type="button"
+      onClick={handleForgotPassword}
+      className="text-xs text-purple-200/70 hover:text-purple-100 transition-colors"
+    >
+      Forgot Password?
+    </button>
+
+    {/* Floating notice — absolutely positioned, doesn't affect layout */}
+    <div
+      className={`absolute right-0 top-full mt-2 z-10 transition-all duration-300 ease-out ${
+        showResetNotice
+          ? "opacity-100 translate-y-0"
+          : "opacity-0 -translate-y-1 pointer-events-none"
+      }`}
+    >
+      <div className="whitespace-nowrap bg-white/10 backdrop-blur-xl border border-white/15 text-purple-100 text-[11px] px-3 py-1.5 rounded-lg shadow-[0_4px_20px_rgba(147,51,234,0.3)]">
+        Password reset isn't available yet
+      </div>
+    </div>
+  </div>
+)}
 
             {error && (
               <p className="text-red-300 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">

@@ -48,14 +48,26 @@ export default function ConnectionsPage() {
     removeConnection(id)
   }
 
-  const fields = [
-    { label: "Connection Name", key: "name",          placeholder: "My Database" },
-    { label: "Host",            key: "host",          placeholder: "localhost" },
-    { label: "Port",            key: "port",          placeholder: "5432", type: "number" },
-    { label: "Database",        key: "database_name", placeholder: "mydb" },
-    { label: "Username",        key: "username",      placeholder: "postgres" },
-    { label: "Password",        key: "password",      placeholder: "••••••", type: "password" },
+  // const fields = [
+  //   { label: "Connection Name", key: "name",          placeholder: "My Database" },
+  //   { label: "Host",            key: "host",          placeholder: "localhost" },
+  //   { label: "Port",            key: "port",          placeholder: "5432", type: "number" },
+  //   { label: "Database",        key: "database_name", placeholder: "mydb" },
+  //   { label: "Username",        key: "username",      placeholder: "postgres" },
+  //   { label: "Password",        key: "password",      placeholder: "••••••", type: "password" },
+  // ]
+
+  const getFields = (dbType) => {
+  const isMysql = dbType === "mysql"
+  return [
+    { label: "Connection Name", key: "name",          placeholder: "e.g. My Database" },
+    { label: "Host",            key: "host",          placeholder: "e.g. localhost" },
+    { label: "Port",            key: "port",          placeholder: isMysql ? "3306" : "5432", type: "number" },
+    { label: "Database",        key: "database_name", placeholder: "e.g. mydb" },
+    { label: "Username",        key: "username",      placeholder: isMysql ? "e.g. root" : "e.g. postgres" },
+    { label: "Password",        key: "password",      placeholder: "••••••••", type: "password" },
   ]
+}
 
   const showInitialLoading = loading && !loaded
 
@@ -90,7 +102,8 @@ export default function ConnectionsPage() {
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              {fields.map(({ label, key, placeholder, type }) => (
+              {/* {fields.map(({ label, key, placeholder, type }) => ( */}
+              {getFields(form.db_type).map(({ label, key, placeholder, type }) => (
                 <div key={key}>
                   <label className="block text-xs text-slate-400 mb-1">{label}</label>
                   <input
