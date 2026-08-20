@@ -4,6 +4,9 @@ import api from "../api/client"
 import { useAuthStore } from "../store/authStore"
 
 function extractErrorMessage(e, fallback) {
+  if (!e.response) {
+    return "Couldn't reach the server. It may still be waking up — please try again in a moment."
+  }
   const detail = e.response?.data?.detail
   if (!detail) return fallback
   if (typeof detail === "string") return detail
@@ -20,41 +23,58 @@ export default function LoginPage() {
   const [fullName, setFullName] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [slowNotice, setSlowNotice] = useState(false)
   const { setAuth } = useAuthStore()
   const navigate = useNavigate()
+
+  const withSlowNotice = async (fn) => {
+    // If the request is taking a while (likely a cold Render instance),
+    // surface that explicitly instead of leaving a static "Please wait...".
+    const timer = setTimeout(() => setSlowNotice(true), 4000)
+    try {
+      await fn()
+    } finally {
+      clearTimeout(timer)
+      setSlowNotice(false)
+    }
+  }
 
   const handleLogin = async () => {
     setLoading(true)
     setError("")
-    try {
-      const { data } = await api.post("/auth/login", { email, password })
-      const me = await api.get("/auth/me", {
-        headers: { Authorization: `Bearer ${data.access_token}` },
-      })
-      setAuth(me.data, data.access_token)
-      navigate("/dashboard")
-    } catch (e) {
-      setError(extractErrorMessage(e, "Login failed."))
-    } finally {
-      setLoading(false)
-    }
+    await withSlowNotice(async () => {
+      try {
+        const { data } = await api.post("/auth/login", { email, password })
+        const me = await api.get("/auth/me", {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        })
+        setAuth(me.data, data.access_token)
+        navigate("/dashboard")
+      } catch (e) {
+        setError(extractErrorMessage(e, "Login failed."))
+      } finally {
+        setLoading(false)
+      }
+    })
   }
 
   const handleRegister = async () => {
     setLoading(true)
     setError("")
-    try {
-      await api.post("/auth/register", {
-        email,
-        password,
-        full_name: fullName,
-      })
-      setTab("login")
-    } catch (e) {
-      setError(extractErrorMessage(e, "Registration failed."))
-    } finally {
-      setLoading(false)
-    }
+    await withSlowNotice(async () => {
+      try {
+        await api.post("/auth/register", {
+          email,
+          password,
+          full_name: fullName,
+        })
+        setTab("login")
+      } catch (e) {
+        setError(extractErrorMessage(e, "Registration failed."))
+      } finally {
+        setLoading(false)
+      }
+    })
   }
 
   const isLogin = tab === "login"
@@ -160,6 +180,12 @@ export default function LoginPage() {
             {error && (
               <p className="text-red-300 text-sm bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
                 {error}
+              </p>
+            )}
+
+            {loading && slowNotice && (
+              <p className="text-purple-200 text-xs bg-purple-500/10 border border-purple-400/20 px-3 py-2 rounded-lg">
+                Still working — the server may be waking up from idle. This can take up to a minute.
               </p>
             )}
 
